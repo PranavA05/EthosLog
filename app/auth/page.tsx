@@ -105,7 +105,7 @@ export default function AuthPage() {
       }
     } catch (err) {
       // If an error (like wrong password), show
-      setError(err.message);
+      setError((err as any).message);
     }
   };
 
