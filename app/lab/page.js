@@ -12,12 +12,9 @@ import {db} from '../auth/firebase';
 import {collection, addDoc} from 'firebase/firestore';
 
 const PageWrapper = styled.div`
-  width: 72rem;
+  width: 64rem;
   margin: 0 auto;
-  padding-top: 2rem;
-  padding-bottom: 5rem;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding: 4rem 1.5 rem;
   animation: fadeIn 0.5s ease-in-out;
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -57,13 +54,12 @@ const BackLink = styled(Link)`
   transition: opacity 0.2s ease;
   &:hover { opacity: 1;}
 `;
-
 const CentralColumn = styled.main`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 2rem; 
+  grid-template-columns: 1fr;
   @media (min-width: 1024px) {
-  flex-direction: row;
+  grid-template-columns: 280px 1fr;
   align-items: flex-start;}
 `;
 const QuoteBanner = styled.div`

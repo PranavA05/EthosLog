@@ -1,10 +1,69 @@
+/* --- Root Variables (Keep these at the top) --- */
 :root {
-  --background: #F4F1EA; 
-  --foreground: #1A1A1A; 
+  --background: #F4F1EA;
+  --foreground: #1A1A1A;
 }
+
 body {
   background-color: var(--background);
   color: var(--foreground);
   margin: 0;
-  font-family: 'Georgia', serif; 
+  font-family: 'Georgia', serif;
+}
+
+/* My original NavBar wasn't rendering at all on vercel
+After testing this is the only way I could get it to render */
+.nav-container {
+  position: sticky !important;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: rgba(244, 241, 234, 0.9);
+  backdrop-filter: blur(8px);
+}
+.nav-inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  display: flex !important; /* Force horizontal layout */
+  justify-content: space-between;
+  align-items: center;
+}
+.brand-logo {
+  font-size: 1.875rem !important;
+  font-family: 'Georgia', serif !important;
+  font-style: italic;
+  font-weight: bold;
+  text-decoration: none !important;
+  background-color: var(--foreground);
+  color: var(--background) !important;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px 5px 15px 8px;
+  transform: rotate(-2deg);
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.brand-logo:hover {
+  transform: rotate(0deg);
+}
+.nav-links-wrapper {
+  display: flex !important;
+  align-items: center;
+  gap: 1.5rem !important; /* Space between links */
+}
+.styled-link {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(26, 26, 26, 0.6) !important;
+  text-decoration: none !important;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+.styled-link:hover {
+  color: var(--foreground) !important;
+  background-color: rgba(0, 0, 0, 0.05);
 }
