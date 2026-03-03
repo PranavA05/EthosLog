@@ -90,7 +90,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const router = useRouter(); //redirects user after success
 
-  const handleAuth = async (e) => {
+  const handleAuth = async (e:any) => {
     e.preventDefault(); 
     setError(""); 
     try {
