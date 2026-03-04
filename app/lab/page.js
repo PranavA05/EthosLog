@@ -1,12 +1,13 @@
 /*
-Page :Insight Lab Page 
-Purpose: lets users record insights and save them. The form inputs are handled by React state while connecting to Firebase DB
-which is the location to save the "reflections".
+Page: Insight Lab Page 
+Purpose: lets users record insights and save them. The form inputs handled by React state 
+while connecting to Firebase DB which is the location to save the "reflections".
 */
 
 "use client";
 import {useState, useEffect} from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import styled from 'styled-components';
 import {db} from '../auth/firebase';
 import {collection, addDoc} from 'firebase/firestore';
@@ -14,13 +15,15 @@ import {collection, addDoc} from 'firebase/firestore';
 const PageWrapper = styled.div`
   width: 64rem;
   margin: 0 auto;
-  padding: 4rem 1.5 rem;
+  padding: 4rem 1.5rem;
   animation: fadeIn 0.5s ease-in-out;
+  
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 `;
+
 const Header = styled.header`
   display: flex;
   justify-content: space-between;
@@ -31,248 +34,271 @@ const Header = styled.header`
 `;
 const Title = styled.h1`
   font-size: 2.25rem;
-  font-family: 'Georgia', serif;
+  font-family: 'Crimson Text', serif;
   font-style: italic;
   margin-bottom: 0.5rem;
-  letter-spacing: -0.025em;
 `;
 const Subtitle = styled.p`
-  font-family: 'Inter', sans-serif;
+  font-family: 'Geist Mono', monospace;
   font-size: 0.75rem;
+  color: rgba(26, 26, 26, 0.6);
   opacity: 0.6;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
 `;
 const BackLink = styled(Link)`
-  font-family: 'Inter', sans-serif;
+  font-family: 'Geist Mono', monospace;
   font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  text-decoration: none;
   color: var(--foreground);
   opacity: 0.5;
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-  &:hover { opacity: 1;}
+  &:hover {
+    opacity: 1;
+  }
 `;
-const CentralColumn = styled.main`
-  display: grid;
-  gap: 2rem; 
-  grid-template-columns: 1fr;
-  @media (min-width: 1024px) {
-  grid-template-columns: 280px 1fr;
-  align-items: flex-start;}
-`;
-const QuoteBanner = styled.div`
+
+const QuoteSideBar = styled.div`
   padding: 2rem;
   background-color: rgba(26, 26, 26, 0.03);
   border: 1px solid rgba(26, 26, 26, 0.1);
   border-left: 4px solid var(--foreground);
-`;
-const CardLabel = styled.p`
-  font-family: 'Inter', sans-serif;
-  font-size: 0.5625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.5;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 `;
 const Quote = styled.blockquote`
-  font-family: 'Georgia', serif;
+  font-family: 'Crimson Text', serif;
   font-style: italic;
   font-size: 1.125rem;
   line-height: 1.6;
   margin-bottom: 0.5rem;
 `;
-const QuoteAuthor = styled.cite`
-  font-family: 'Inter', sans-serif;
+const QuoteAuthor = styled.p`
+  font-family: 'Geist Mono', monospace;
   font-size: 0.75rem;
   opacity: 0.7;
 `;
-const Canvas = styled.div`
+
+const InputSection = styled.div`
   background-color: #FFFFFF;
   padding: 2.5rem;
   border: 1px solid rgba(26, 26, 26, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  min-height: 500px;
-  display: flex;
-  flex-direction: column;
-
-  @media (min-width: 768px) {
-    padding: 3.5rem;}
 `;
-const BookInput = styled.input`
+const BookTitleInput = styled.input`
   font-size: 1.5rem;
-  font-family: 'Georgia', serif;
+  font-family: 'Crimson Text', serif;
   font-style: italic;
   border: none;
   outline: none;
   background: transparent;
   color: var(--foreground);
-  margin-bottom: 1.5rem;
-
-  @media (min-width: 768px) { font-size: 1.875rem;}
-  &::placeholder { opacity: 0.3;}
+  margin-bottom: 2rem;
+  width: 100%;
+  &::placeholder {
+    opacity: 0.3;
+  }
 `;
-const TextArea = styled.textarea`
-  flex-grow: 1;
-  font-size: 1.125rem;
-  line-height: 2;
-  font-family: 'Georgia', serif;
+
+const InsightTextArea = styled.textarea`
+  width: 100%;
+  min-height: 300px;
+  font-size: 1rem;
+  line-height: 1.8;
+  font-family: 'Crimson Text', serif;
   border: none;
   outline: none;
-  resize: none;
   background: transparent;
   color: var(--foreground);
-  @media (min-width: 768px) {font-size: 1.25rem; }
-  &::placeholder { opacity: 0.3;}
+  resize: vertical; 
+  &::placeholder {
+    opacity: 0.3;
+  }
 `;
-const CanvasFooter = styled.div`
-  margin-top: 3rem;
+
+const FooterRow = styled.div`
+  margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid rgba(26, 26, 26, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  @media (min-width: 640px){
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;}
-    `;
+  gap: 1rem;
+`;
+
 const TagInputWrapper = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  @media (min-width: 640px) { width: auto;}
-  `;
+  gap: 0.5rem;
+`;
 
-const TagSymbol = styled.span`
-  opacity: 0.4;
-  font-family: 'Inter', sans-serif;
+const HashSymbol = styled.span`
   font-size: 0.875rem;
-  `;
+  opacity: 0.4;
+`;
 
 const TagInput = styled.input`
   font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   border: none;
   outline: none;
   background: transparent;
-  color: var(--foreground);
-  width: 100%;
-  &::placeholder { opacity: 0.4; }
+  color: var(--foreground); 
+  &::placeholder {
+    opacity: 0.4;
+  }
 `;
+
 const SaveButton = styled.button`
   background-color: var(--foreground);
   color: var(--background);
-  padding: 1rem 2rem;
-  font-size: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Geist Mono', monospace;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  width: 100%;
-  @media (min-width: 640px) { width: auto; }
-  &:hover { background-color: rgba(26, 26, 26, 0.8); }
+  &:hover {
+    opacity: 0.8;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
+
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+`;
+
 export default function InsightLabPage() {
-  //form inputs
+  const searchParams = useSearchParams();
+  // form 
   const [bookTitle, setBookTitle] = useState("");
-  const [insightText, setInsightText] = useState("");
-  // API; Random Quote
-  const [quote, setQuote] =useState(" New Quote..");
-  const [author, setAuthor] = useState("");
-  useEffect(() => {
-    const fetchQuote =async () => {
-      try {
-        const response = await fetch('https://dummyjson.com/quotes/random');
-        const data= await response.json();
-        setQuote(data.quote);
-        setAuthor('-' + data.author);
-      } catch(error) {
-        console.error("Error fetching the quote", error);
-        setQuote(" I think; Therefore I am.");
-        setAuthor("- Rene Descartes ")
-      }
-    };
-    fetchQuote();
-  }, []);
+  const [insight, setInsight] = useState("");
   const [tag, setTag] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  //save data to Firebase
-  const handleSave = async () => {
-    //no empty notes
-    if (!bookTitle || !insightText) {
-      alert("Please fill out the book title and your insight!");
+  const [error, setError] = useState("");
+
+  // quote 
+  const [quote, setQuote] = useState("Loading...");
+  const [author, setAuthor] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(true);
+
+  // fetch random quote every time the page loads
+  useEffect(() => {
+    fetchQuote();
+  }, []);
+
+  // check if book selected from library
+  useEffect(() => {
+    const bookParam = searchParams.get('book');
+    if (bookParam) {
+      setBookTitle(decodeURIComponent(bookParam));
+    }
+  }, [searchParams]);
+
+
+  // API for quotes , randomly selects a quote to show the user 
+  const fetchQuote = async () => {
+    try {
+      const response = await fetch('https://dummyjson.com/quotes/random');
+      const data = await response.json();
+      setQuote(data.quote);
+      setAuthor(data.author);
+      setQuoteLoading(false);
+    } catch (err) {
+      console.error("Failed to load quote:", err);
+      // if err, base quote
+      setQuote("The only way to do great work is to love what you do.");
+      setAuthor("Steve Jobs");
+      setQuoteLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    // validation
+    if (!bookTitle.trim()) {
+      setError("Please enter a book title");
       return;
     }
+    if (!insight.trim()) {
+      setError("Please write an insight");
+      return;
+    }
+    setError("");
     setIsSaving(true);
     try {
-      // new document in a reflections
+      // save to firebase
       await addDoc(collection(db, "reflections"), {
         book: bookTitle,
-        insight: insightText,
-        tag: tag || "General", 
+        insight: insight,
+        tag: tag || "general",
         date: new Date().toLocaleDateString(),
       });
-      // Clear the form
+      // clear form after saving
       setBookTitle("");
-      setInsightText("");
+      setInsight("");
       setTag("");
-      alert("Insight saved successfully!");
+      alert("Saved!");
     } catch (error) {
-      console.error("Error saving document: ", error);
-      alert("Failed to save. Check the console.");
+      console.error("Error saving:", error);
+      setError("Failed to save. Try again.");
     } finally {
       setIsSaving(false);
     }
   };
+
   return (
-    <PageWrapper>      
+    <PageWrapper>
       <Header>
         <div>
           <Title>Insight Lab</Title>
-          <Subtitle>Distill your reading into action.</Subtitle>
+          <Subtitle>Write your thoughts here</Subtitle>
         </div>
-        <BackLink href="/library">&larr; Back to Library</BackLink>
+        <BackLink href="/library">&larr; Back</BackLink>
       </Header>
-      <CentralColumn>       
-        <QuoteBanner>
-          <CardLabel>Daily Inspiration</CardLabel>
-          <Quote> "{quote}" </Quote>
-          <QuoteAuthor>{author}</QuoteAuthor>
-        </QuoteBanner>
-        <Canvas>
-          <BookInput 
-            type="text" 
-            placeholder="Select a book..."
+
+      <QuoteSideBar>
+        {quoteLoading ? (
+          <p>Loading quote...</p>
+        ) : (
+          <>
+            <Quote>"{quote}"</Quote>
+            <QuoteAuthor>— {author}</QuoteAuthor>
+          </>
+        )}
+      </QuoteSideBar>
+
+      <form onSubmit={handleSave}>
+        <InputSection>
+          <BookTitleInput
+            type="text"
+            placeholder="Book title..."
             value={bookTitle}
             onChange={(e) => setBookTitle(e.target.value)}
-          />         
-          <TextArea 
-            placeholder="What insight did you capture today? How does it apply to your life?" 
-            value={insightText}
-            onChange={(e) => setInsightText(e.target.value)}
-          />         
-          <CanvasFooter>
+          />
+          <InsightTextArea
+            placeholder="What did you learn? How does it apply to you?"
+            value={insight}
+            onChange={(e) => setInsight(e.target.value)}
+          />
+          <FooterRow>
             <TagInputWrapper>
-              <TagSymbol>#</TagSymbol>
-              <TagInput 
-                type="text" 
-                placeholder="SelfImprovement, Mindset..."
+              <HashSymbol>#</HashSymbol>
+              <TagInput
+                type="text"
+                placeholder="tag (optional)"
                 value={tag}
-                onChange={(e) => setTag(e.target.value)} 
+                onChange={(e) => setTag(e.target.value)}
               />
-            </TagInputWrapper>            
-            <SaveButton onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving.." : "Save to Board"}
-            </SaveButton>
-          </CanvasFooter>
-        </Canvas>
-      </CentralColumn>      
+            </TagInputWrapper>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+              <SaveButton type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save"}
+              </SaveButton>
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+            </div>
+          </FooterRow>
+        </InputSection>
+      </form>
     </PageWrapper>
   );
 }

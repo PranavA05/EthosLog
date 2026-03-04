@@ -1,9 +1,9 @@
 "use client";
-/* First page where user land and can sign in/ sign up and then move on to the library */
+/* Landing page - where users first arrive */
 import Link from "next/link";
 import styled from "styled-components";
 
-//Flexbox to center everything 
+// centering with flexbox 
 const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -12,6 +12,7 @@ const PageContainer = styled.div`
   justify-content: center;
   padding: 0 1.5rem;
 `;
+
 const MainContent = styled.main`
   display: flex;
   flex-direction: column;
@@ -25,19 +26,19 @@ const Title = styled.h1`
   font-family: 'Georgia', serif;
   font-style: italic;
   margin-bottom: 1.5rem;
-  letter-spacing: -0.05em;
+  
   @media (min-width: 768px) {
     font-size: 6rem;
   }
 `;
 
-//The "Scribble" Effect using CSS border-radius and transform
+// scribble effect with uneven corners
 const ScribbleText = styled.span`
   background-color: var(--foreground);
   color: var(--background);
   padding: 0.5rem 1.5rem;
-  border-radius: 25px 8px 30px 12px; // Uneven corners create the marker look 
-  transform: rotate(-2deg); // Slight tilt 
+  border-radius: 25px 8px 30px 12px;
+  transform: rotate(-2deg);
   display: inline-block;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
 `;
@@ -49,59 +50,53 @@ const Subtitle = styled.p`
   opacity: 0.8;
   margin-bottom: 3rem;
   max-width: 28rem;
+  
   @media (min-width: 768px) {
     font-size: 1.25rem;
   }
 `;
 
+// tried full width but looked weird on mobile
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   width: 100%;
+  
   @media (min-width: 640px) {
     flex-direction: row;
     width: auto;
   }
 `;
 
-const PrimaryButton = styled(Link)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2.5rem;
-  background-color: var(--foreground);
-  color: var(--background);
+const Button = styled(Link)`
+  padding: 0.75rem 2rem;
   font-family: 'Inter', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
   font-size: 0.75rem;
   text-decoration: none;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+`;
+
+const PrimaryButton = styled(Button)`
+  background-color: var(--foreground);
+  color: var(--background);
+  
   &:hover {
     opacity: 0.8;
   }
 `;
-const SecondaryButton = styled(Link)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 2.5rem;
+
+const SecondaryButton = styled(Button)`
   background-color: transparent;
-  color: var(--foreground);
   border: 1px solid rgba(26, 26, 26, 0.2);
-  font-family: 'Inter', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.75rem;
-  text-decoration: none;
-  transition: background-color 0.2s ease;
+  color: var(--foreground);
+  
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
   }
 `;
 
-// First Page Users see
 export default function Home() {
   return (
     <PageContainer>
@@ -110,15 +105,11 @@ export default function Home() {
           <ScribbleText>ethoslog</ScribbleText>
         </Title>
         <Subtitle>
-          Capture, categorize, and reflect on your insights from the books you read.
-        </Subtitle>       
+          Save and organize your book insights. Revisit your thoughts anytime.
+        </Subtitle>
         <ButtonGroup>
-          <PrimaryButton href="/library">
-            Enter Library
-          </PrimaryButton>      
-          <SecondaryButton href="/auth">
-            Sign In / Sign Up
-          </SecondaryButton>
+          <PrimaryButton href="/library">Go to Library</PrimaryButton>
+          <SecondaryButton href="/auth">Sign In</SecondaryButton>
         </ButtonGroup>
       </MainContent>
     </PageContainer>

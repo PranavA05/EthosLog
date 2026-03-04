@@ -1,8 +1,7 @@
 /* 
 Page: Library Page 
 Purpose: Acts as a search engine for users to find books to write their insight
-This uses React states for the search bar and fetches data from Open Lirary API
-! I had originally planned to use Google's API for this but got rate limited !
+This uses React states for the search bar and fetches data from Open Library API
 */
 
 "use client";
@@ -10,244 +9,230 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import styled from 'styled-components';
 
-
 const Wrapper = styled.div`
-  padding-bottom: 5rem;
+  padding: 2rem 1rem;
   animation: fadeIn 0.5s ease-in-out; 
   
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 `;
+
 const Header = styled.header`
   max-width: 600px;
-  margin: 2rem auto 4rem auto;
+  margin: 0 auto 3rem auto;
   text-align: center;
 `;
+
 const PageTitle = styled.h1`
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-family: 'Crimson Text', serif;
   font-style: italic;
   margin-bottom: 1rem;
-  
-  @media (min-width: 768px) {
-    font-size: 3rem;
-  }
 `;
+
 const Subtitle = styled.p`
   font-family: 'Geist Mono', monospace;
   font-size: 0.875rem;
-  color: rgba(26, 26, 26, 0.6); 
-  margin-bottom: 2.5rem;
+  color: rgba(26, 26, 26, 0.6);
   text-transform: uppercase;
   letter-spacing: 0.15em;
 `;
 
-
 const SearchContainer = styled.div`
-  position: relative;
   display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 32rem;
-  margin: 0 auto;
-  border-bottom: 1px solid rgba(26, 26, 26, 0.2);
-  padding-bottom: 0.5rem;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: 'Geist Mono', monospace;
+`;
+
+const SearchButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Geist Mono', monospace;
   
   &:hover {
-    border-color: rgba(26, 26, 26, 0.8);
+    background: #555;
   }
 `;
-const SearchInput = styled.input`
-  width: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.875rem;
-  color: var(--foreground);
-`;
-
 
 const GridContainer = styled.main`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  column-gap: 2rem;
-  row-gap: 3.5rem;
-  @media (min-width: 768px) { grid-template-columns: repeat(3, 1fr); }
-  @media (min-width: 1024px) { grid-template-columns: repeat(4, 1fr); }
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 const BookCard = styled(Link)`
-  display: flex;
-  flex-direction: column;
   text-decoration: none;
-  color: inherit;  
-  &:hover h3 {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  color: inherit;
+  border: 1px solid #e0e0e0;
+  padding: 1rem;
+  border-radius: 8px;
+  
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
 `;
+
 const CoverImage = styled.div`
-  aspect-ratio: 2 / 3;
-  background-color: rgba(26, 26, 26, 0.05); 
+  width: 100%;
+  height: 250px;
+  background: #f5f5f5;
   margin-bottom: 1rem;
-  border: 1px solid rgba(26, 26, 26, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.3s ease;  
-  ${BookCard}:hover & {
-    transform: translateY(-6px);
+  border-radius: 4px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 `;
-const CoverText = styled.span`
+
+const CoverPlaceholder = styled.p`
+  color: #999;
+  text-align: center;
+  font-size: 0.9rem;
+  padding: 1rem;
   font-family: 'Crimson Text', serif;
   font-style: italic;
-  color: rgba(26, 26, 26, 0.4);
-  text-align: center;
-  padding: 0 1rem;
 `;
+
 const Title = styled.h3`
-  font-size: 1.125rem;
+  font-size: 1.1rem;
   font-family: 'Crimson Text', serif;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin: 0.5rem 0;
 `;
+
 const Author = styled.p`
-  font-size: 0.75rem;
+  color: #666;
+  font-size: 0.9rem;
+  font-family: 'Geist Mono', monospace;
+  margin: 0.5rem 0;
+`;
+
+const Category = styled.p`
+  font-size: 0.8rem;
+  color: #999;
+  font-family: 'Geist Mono', monospace;
+`;
+
+const ErrorMessage = styled.p`
+  color: #d32f2f;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.875rem;
+`;
+
+const InitialMessage = styled.p`
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.875rem;
   color: rgba(26, 26, 26, 0.6);
-  font-family: 'Geist Mono', monospace;
-  margin-bottom: 0.75rem;
 `;
-const CardFooter = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(26, 26, 26, 0.1);
-`;
-const CategoryTag = styled.span`
-  font-size: 0.5625rem;
-  text-transform: uppercase;
-  font-family: 'Geist Mono', monospace;
-  color: rgba(26, 26, 26, 0.6);
-  background-color: rgba(26, 26, 26, 0.04);
-  padding: 0.25rem 0.5rem;
-`;
-const InsightCount = styled.p`
-  font-size: 0.5625rem;
-  text-transform: uppercase;
-  font-family: 'Geist Mono', monospace;
-  color: rgba(26, 26, 26, 0.5);
-`;
-
-
-
-const AddEntryCard = styled(Link)`
-  aspect-ratio: 2 / 3;
-  border: 1px dashed rgba(26, 26, 26, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: rgba(26, 26, 26, 0.4);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  &:hover {
-    border-color: rgba(26, 26, 26, 0.5);
-    color: rgba(26, 26, 26, 0.7);
-  }
-`;
-const AddIcon = styled.span`
-  font-size: 2rem;
-  font-weight: 300;
-  margin-bottom: 0.5rem;
-`;
-const AddText = styled.p`
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  font-family: 'Geist Mono', monospace;
-  margin-top: 0.5rem;
-`;
-
 
 export default function LibraryPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [Books, setBooks] = useState([]);
-  const [searching, setSearching] = useState(false);
-  // API; Open Library 
-  const searchBooks = async (e) => {
-    e.preventDefault(); 
-    if(!searchTerm) return;
-    setSearching(true); 
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    
+    if (!searchTerm.trim()) {
+      setError("Please enter a book title");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    
     try {
-      //  had to switch to Open Library API as was getting limited by Google API
-      const response = await fetch(`https://openlibrary.org/search.json?q=${searchTerm}&limit=8`);
+      const response = await fetch(
+        `https://openlibrary.org/search.json?q=${searchTerm}&limit=8`
+      );
       const data = await response.json();
-      //data returned in a array , docs
-      if (data.docs) { 
+      
+      if (data.docs && data.docs.length > 0) {
         setBooks(data.docs);
       } else {
-        setBooks([]); 
-      } 
-    } catch (error) {
-      console.error("Error fetching books:", error);
+        setError("No books found. Try a different search.");
+        setBooks([]);
+      }
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+      console.log(err);
     } finally {
-      setSearching(false);
+      setLoading(false);
     }
   };
-
 
   return (
     <Wrapper>
       <Header>
         <PageTitle>Your Library</PageTitle>
         <Subtitle>Curating wisdom, one page at a time.</Subtitle>
-        <form onSubmit={searchBooks}>
+        
+        <form onSubmit={handleSearch}>
           <SearchContainer>
             <SearchInput
-              type="text" 
+              type="text"
               placeholder="Type a book and press Enter..."
-              value={searchTerm} 
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <SearchButton type="submit">Search</SearchButton>
           </SearchContainer>
         </form>
-      </Header>     
+        
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </Header>
+
       <GridContainer>
-        {searching ? (
-          <p>Searching open libraries...</p>
-        ) : (
-          Books.map((book) => {
-            const title = book.title || 'Unknown Title';
-            const author = book.author_name ? book.author_name[0] : 'Unknown Author';
-            const coverImage = book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null;
-            const category = book.subject ? book.subject[0] : 'General';          
-            return (
-              <BookCard href={"/lab"} key={book.key || title}>
-                <CoverImage>
-                  {coverImage ? (<img src={coverImage} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : ( 
-                    <CoverText>{title}</CoverText> 
-                  )}
-                </CoverImage>           
-                <Title>{title}</Title>
-                <Author>{author}</Author>
-                <CardFooter>
-                  <CategoryTag>{category}</CategoryTag>
-                  <InsightCount>API Data</InsightCount>
-                </CardFooter>
-              </BookCard>
-            );
-          })
+        {loading && <p>Loading...</p>}
+        
+        {!loading && books.length === 0 && !error && (
+          <InitialMessage>Search for a book to get started</InitialMessage>
         )}
-        <AddEntryCard href="/lab">
-          <AddIcon>+</AddIcon>
-          <AddText>Log New Insight</AddText>
-        </AddEntryCard>
+        
+        {books.map((book) => (
+          <BookCard href={`/lab?book=${encodeURIComponent(book.title)}`} key={book.key}>
+            <CoverImage>
+              {book.cover_i ? (
+                <img
+                  src={`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`}
+                  alt={book.title}
+                />
+              ) : (
+                <CoverPlaceholder>{book.title}</CoverPlaceholder>
+              )}
+            </CoverImage>
+            
+            <Title>{book.title || 'Unknown'}</Title>
+            <Author>
+              {book.author_name ? book.author_name[0] : 'Unknown Author'}
+            </Author>
+            <Category>
+              {book.subject ? book.subject[0] : 'General'}
+            </Category>
+          </BookCard>
+        ))}
       </GridContainer>
     </Wrapper>
   );

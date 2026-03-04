@@ -1,8 +1,8 @@
 "use client";
 /*
-PAGE: Reflection Page
-PURPOSE: This page reads and displays all the user's saved insights from the database.
-It uses a useEffect hook to fetch documents from Firebase Firestore exactly once when the page loads.
+Page: Reflection Page
+Purpose: Display all saved insights/reflections from Firestore
+Shows them in a masonry-style grid
 */
 
 import React, { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import { collection, getDocs } from 'firebase/firestore';
 const PageWrapper = styled.div` 
   max-width: 64rem;
   margin: 0 auto;
-  padding-top: 2rem;
+  padding: 2rem 1.5rem;
   padding-bottom: 5rem;
   animation: fadeIn 0.5s ease-in-out;
   @keyframes fadeIn {
@@ -22,155 +22,152 @@ const PageWrapper = styled.div`
   }
 `;
 
-const HeaderContainer = styled.header`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+const PageHeader = styled.header`
   margin-bottom: 3.5rem;
   padding-bottom: 2rem;
   border-bottom: 1px solid rgba(26, 26, 26, 0.1);
-  @media (min-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
 `;
 
-const Title = styled.h1`
+const PageTitle = styled.h1`
   font-size: 2.25rem;
   font-family: 'Georgia', serif;
   font-style: italic;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.025em;
+  margin: 0;
+`;
+
+const InsightsContainer = styled.main`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
   @media (min-width: 768px) {
-    font-size: 3rem;
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 
-// Logic for the board's layout
-const MasonryGrid = styled.main`
-  column-count: 1;
-  column-gap: 1.5rem;
-  @media (min-width: 768px) { column-count: 2; }
-  @media (min-width: 1024px) { column-count: 3; }
-`;
-const ArticleCard = styled.article`
-  break-inside: avoid; // Prevents cards from splitting
-  margin-bottom: 1.5rem;
+const Card = styled.article`
   background-color: #FFFFFF;
-  padding: 2rem;
+  padding: 1.5rem;
   border: 1px solid rgba(26, 26, 26, 0.1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.2s ease;
   &:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
+  gap: 1rem;
 `;
 const Tag = styled.span`
   font-family: 'Inter', sans-serif;
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.5;
-  background-color: var(--background);
-  border: 1px solid rgba(26, 26, 26, 0.05);
+  opacity: 0.6;
+  background-color: rgba(26, 26, 26, 0.05);
+  border: 1px solid rgba(26, 26, 26, 0.08);
   padding: 0.25rem 0.5rem;
+  white-space: nowrap;
 `;
-const DateText = styled.span`
+const DateLabel = styled.span`
   font-family: 'Inter', sans-serif;
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.4;
+  opacity: 0.5;
+  white-space: nowrap;
 `;
-const ReflectionText = styled.p`
+const InsightQuote = styled.p`
   font-family: 'Georgia', serif;
   font-size: 1rem;
   line-height: 1.8;
   color: var(--foreground);
-  margin-bottom: 2rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
 `;
 const CardFooter = styled.div`
   padding-top: 1rem;
   border-top: 1px solid rgba(26, 26, 26, 0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 `;
-
 const BookTitle = styled.p`
   font-family: 'Georgia', serif;
   font-weight: 500;
   font-size: 0.875rem;
-  cursor: pointer;
-  ${ArticleCard}:hover & {
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    text-decoration-color: rgba(26, 26, 26, 0.2);
-  }
+  margin: 0 0 0.25rem 0;
 `;
 const BookAuthor = styled.p`
   font-family: 'Inter', sans-serif;
   font-size: 0.625rem;
   opacity: 0.6;
-  margin-top: 0.25rem;
+  margin: 0;
+`;
+
+const LoadingMessage = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: rgba(26, 26, 26, 0.6);
+`;
+
+const EmptyMessage = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: rgba(26, 26, 26, 0.6);
 `;
 
 export default function ReflectionBoardPage() {
   const [insights, setInsights] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const fetchInsights = async () => {
-      try {
-        const query = await getDocs(collection(db, "reflections"));
-        const fetchedData = [];
-        query.forEach((doc) => {
-          fetchedData.push({ id: doc.id, ...doc.data() });
+    loadInsights();
+  }, []);
+
+  //fetches insights from reflections collection 
+  const loadInsights = async () => {
+    try {
+      const query = await getDocs(collection(db, "reflections"));
+      const fetchedInsights = [];
+      
+      query.forEach((doc) => {
+        fetchedInsights.push({
+          id: doc.id,
+          ...doc.data()
         });
-        setInsights(fetchedData);
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchInsights();
-  }, []); // [] needed to run once
+      });
+      setInsights(fetchedInsights);
+    } catch (error) {
+      console.error("Error loading insights:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <PageWrapper>
-      <HeaderContainer>
-        <div>
-          <Title>Reflection Board</Title>
-        </div>
-      </HeaderContainer>
+      <PageHeader>
+        <PageTitle>Reflection Board</PageTitle>
+      </PageHeader>
       {isLoading ? (
-        <p>Loading your insights..</p>
-      ) : (
-        <MasonryGrid>
+        <LoadingMessage>Loading your insights...</LoadingMessage>
+      ) : insights.length > 0 ? (
+        <InsightsContainer>
           {insights.map((item) => (
-            <ArticleCard key={item.id}>
+            <Card key={item.id}>
               <CardHeader>
-                <Tag>#{item.tag}</Tag>
-                <DateText>{item.date}</DateText>
+                <Tag>#{item.tag || 'general'}</Tag>
+                <DateLabel>{item.date}</DateLabel>
               </CardHeader>
-              <ReflectionText>"{item.insight}"</ReflectionText>
+              <InsightQuote>"{item.insight}"</InsightQuote>
               <CardFooter>
-                <div>
-                  <BookTitle>{item.book}</BookTitle>
-                  <BookAuthor>Note:</BookAuthor>
-                </div>
+                <BookTitle>{item.book}</BookTitle>
+                <BookAuthor>From: {item.author || 'Unknown Author'}</BookAuthor>
               </CardFooter>
-            </ArticleCard>
+            </Card>
           ))}
-        </MasonryGrid>
+        </InsightsContainer>
+      ) : (
+        <EmptyMessage>No insights yet. Start writing in the Insight Lab!</EmptyMessage>
       )}
     </PageWrapper>
   );
